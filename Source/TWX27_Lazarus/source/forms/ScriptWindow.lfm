@@ -1,0 +1,15 @@
+object frmScriptWindow: TfrmScriptWindow
+  Left = 200
+  Height = 400
+  Top = 200
+  Width = 600
+  Caption = 'Script Window'
+  ClientHeight = 400
+  ClientWidth = 600
+  Color = clBtnFace
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  OnPaint = onFormPaint
+  LCLVersion = '4.2.0.0'
+end

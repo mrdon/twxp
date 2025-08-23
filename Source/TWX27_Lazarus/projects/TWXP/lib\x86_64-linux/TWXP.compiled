@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="/usr/bin/fpc" Date="1625802185"/>
+  <Params Value="-MObjFPC -Scghi -Cg -O1 -gw3 -gl -l -vewnhibq -Fi/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/lib\x86_64-linux -Fu/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/ -Fu/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/..\..\source\forms -Fu/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/..\..\source\core -Fu/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/..\..\source\utils -Fu/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/..\..\source\libs\synapse -Fu/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/..\..\source -FU/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/lib\x86_64-linux/ -FE/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/ -o/home/mrdon/dev/twxp/Source/TWX27_Lazarus/projects/TWXP/TWXP TWXP.lpr"/>
+  <Complete Value="False"/>
+</CONFIG>
