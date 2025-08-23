@@ -7,10 +7,10 @@ interface
 uses
   Classes, SysUtils, IniFiles, Process
   {$IFDEF WINDOWS}
-  , Windows, Registry, ScktComp, Messages
+  , Windows, Registry, ScktComp
   {$ENDIF}
   {$IFDEF UNIX}
-  , BaseUnix, Unix, LMessages
+  , BaseUnix, Unix
   {$ENDIF}
   ;
 

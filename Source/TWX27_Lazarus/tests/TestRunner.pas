@@ -6,7 +6,8 @@ uses
   Classes, SysUtils, consoletestrunner,
   // Import all test units
   TestLazarusCompat,
-  TestTCP;
+  TestTCP,
+  TestNetworking;
 
 type
   TTWXTestRunner = class(TTestRunner)
@@ -23,6 +24,7 @@ begin
   WriteLn('These tests validate the cross-platform migration components:');
   WriteLn('- LazarusCompat: Cross-platform abstraction layer');
   WriteLn('- TCP: Network communication layer');
+  WriteLn('- Networking: Phase 1C network layer validation');
   WriteLn('- Configuration system');
   WriteLn('- File operations');
   WriteLn('- Hardware identification');

@@ -30,6 +30,7 @@ uses
   SysUtils,
   Classes,
   {$IFDEF UNIX}cthreads,{$ENDIF}
+  SyncObjs,
   LazarusCompat,
   {$IFDEF FPC}
   ExtCtrls,
@@ -156,9 +157,15 @@ type
     FIsServer: Boolean;
     FPort: Word;
     FConnectedClients: TList;
+    FClientLock: TCriticalSection;
+  protected
+    procedure AddClient(Client: ITWXSocketEx);
+    procedure RemoveClient(Client: ITWXSocketEx);
+    function GetClientCount: Integer;
   public
     constructor CreateServer;
     constructor CreateClient;
+    constructor CreateFromSocket(Socket: TTCPBlockSocket);
     destructor Destroy; override;
     procedure SetEventHandler(Handler: ITWXSocketEventHandler);
     function GetRemoteAddress: string;
@@ -244,6 +251,7 @@ type
 
     // Client connection tracking for cross-platform
     FConnectedClients : TList;
+    FClientLock : TCriticalSection;  // Thread safety for client list access
     FAcceptThread : TServerAcceptThread;
 
     // MB - Strings to hold TW2002 color codes and user color codes
@@ -684,27 +692,85 @@ begin
   inherited Create(nil);
   FIsServer := True;
   FConnectedClients := TList.Create;
+  FClientLock := TCriticalSection.Create;
 end;
 
 constructor TTWXSynapseSocketEx.CreateClient;
 begin
   inherited Create(nil);
   FIsServer := False;
+  FConnectedClients := nil;
+  FClientLock := nil;
+end;
+
+constructor TTWXSynapseSocketEx.CreateFromSocket(Socket: TTCPBlockSocket);
+begin
+  inherited Create(Socket);
+  FIsServer := False;
+  FConnectedClients := nil;
+  FClientLock := nil;
 end;
 
 destructor TTWXSynapseSocketEx.Destroy;
 begin
   if Assigned(FConnectedClients) then
   begin
-    FConnectedClients.Clear;
-    FConnectedClients.Free;
+    FClientLock.Acquire;
+    try
+      FConnectedClients.Clear;
+      FConnectedClients.Free;
+    finally
+      FClientLock.Release;
+    end;
   end;
+  if Assigned(FClientLock) then
+    FClientLock.Free;
   inherited;
 end;
 
 procedure TTWXSynapseSocketEx.SetEventHandler(Handler: ITWXSocketEventHandler);
 begin
   FEventHandler := Handler;
+end;
+
+procedure TTWXSynapseSocketEx.AddClient(Client: ITWXSocketEx);
+begin
+  if not FIsServer or not Assigned(FConnectedClients) then
+    Exit;
+    
+  FClientLock.Acquire;
+  try
+    FConnectedClients.Add(Pointer(Client));
+  finally
+    FClientLock.Release;
+  end;
+end;
+
+procedure TTWXSynapseSocketEx.RemoveClient(Client: ITWXSocketEx);
+begin
+  if not FIsServer or not Assigned(FConnectedClients) then
+    Exit;
+    
+  FClientLock.Acquire;
+  try
+    FConnectedClients.Remove(Pointer(Client));
+  finally
+    FClientLock.Release;
+  end;
+end;
+
+function TTWXSynapseSocketEx.GetClientCount: Integer;
+begin
+  Result := 0;
+  if not FIsServer or not Assigned(FConnectedClients) then
+    Exit;
+    
+  FClientLock.Acquire;
+  try
+    Result := FConnectedClients.Count;
+  finally
+    FClientLock.Release;
+  end;
 end;
 
 function TTWXSynapseSocketEx.GetRemoteAddress: string;
@@ -739,8 +805,8 @@ begin
     ClientSocket.Socket := FSocket.Accept;
     if FSocket.LastError = 0 then
     begin
-      ClientWrapper := TTWXSynapseSocketEx.Create(ClientSocket);
-      FConnectedClients.Add(ClientWrapper);
+      ClientWrapper := TTWXSynapseSocketEx.CreateFromSocket(ClientSocket);
+      AddClient(ClientWrapper);
       Result := ClientWrapper;
       if Assigned(FEventHandler) then
         FEventHandler.OnSocketConnect(ClientWrapper);
@@ -782,6 +848,7 @@ begin
   tcpServer.SetEventHandler(Self);
 
   FConnectedClients := TList.Create;
+  FClientLock := TCriticalSection.Create;  // Initialize thread safety
   FAcceptThread := nil;
   FBufferOut := TStringList.Create;
   FBufTimer := TTimer.Create(Self);
@@ -910,6 +977,7 @@ begin
   
   tcpServer := nil; // Interface reference will be cleaned up
   FConnectedClients.Free;
+  FClientLock.Free;  // Cleanup thread safety
   FBufferOut.Free;
   FBufTimer.Free;
 
@@ -1105,26 +1173,32 @@ begin
     Exit;
   end;
 
-  for I := 0 to FConnectedClients.Count - 1 do
-    if (BroadcastDeaf) or (ClientTypes[I] <> ctDeaf) then
-    begin
-      try
-        if (AMarkEcho) and (FClientEchoMarks[I]) then
-          ITWXSocket(FConnectedClients[I]).SendText(#255 + #0 + Text + #255 + #1)
-        else
-          if ClientTypes[I] = ctStream then
-            ITWXSocket(FConnectedClients[I]).SendText(Stream)
+  // Thread-safe client list access
+  FClientLock.Acquire;
+  try
+    for I := 0 to FConnectedClients.Count - 1 do
+      if (BroadcastDeaf) or (ClientTypes[I] <> ctDeaf) then
+      begin
+        try
+          if (AMarkEcho) and (FClientEchoMarks[I]) then
+            ITWXSocket(FConnectedClients[I]).SendText(#255 + #0 + Text + #255 + #1)
           else
-            ITWXSocket(FConnectedClients[I]).SendText(Text);
-      except
-        {$IFDEF WINDOWS}
-        OutputDebugString(PChar('Unexpected error sending broadcast message'));
-        {$ELSE}
-        // Log error on non-Windows platforms
-        WriteLn('Unexpected error sending broadcast message');
-        {$ENDIF}
+            if ClientTypes[I] = ctStream then
+              ITWXSocket(FConnectedClients[I]).SendText(Stream)
+            else
+              ITWXSocket(FConnectedClients[I]).SendText(Text);
+        except
+          {$IFDEF WINDOWS}
+          OutputDebugString(PChar('Unexpected error sending broadcast message'));
+          {$ELSE}
+          // Log error on non-Windows platforms
+          WriteLn('Unexpected error sending broadcast message');
+          {$ENDIF}
+        end;
       end;
-    end;
+  finally
+    FClientLock.Release;
+  end;
 end;
 
 procedure TModServer.ClientMessage(MessageText : string);
@@ -1215,7 +1289,12 @@ end;
 
 function TModServer.GetClientCount : Integer;
 begin
-  Result := FConnectedClients.Count;
+  FClientLock.Acquire;
+  try
+    Result := FConnectedClients.Count;
+  finally
+    FClientLock.Release;
+  end;
 end;
 
 
@@ -1224,10 +1303,15 @@ end;
 
 function TModServer.GetClientAddress(Index : Integer) : string;
 begin
-  if (Index >= 0) and (Index < FConnectedClients.Count) then
-    Result := (ITWXSocketEx(FConnectedClients[Index])).GetRemoteAddress
-  else
-    Result := '';
+  FClientLock.Acquire;
+  try
+    if (Index >= 0) and (Index < FConnectedClients.Count) then
+      Result := (ITWXSocketEx(FConnectedClients[Index])).GetRemoteAddress
+    else
+      Result := '';
+  finally
+    FClientLock.Release;
+  end;
 end;
 
 procedure TModServer.SetClientType(Index : Integer; Value : TClientType);
