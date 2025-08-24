@@ -21,7 +21,7 @@ For license terms please refer to GPL.txt.
 These files should be stored in the root of the compression you 
 received this source in.
 }
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
 unit ScriptRef;
 
 // Shared by both the script compiler and the interpreter.  Contains framework

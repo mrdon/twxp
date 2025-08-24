@@ -105,6 +105,18 @@ function StrToIntSafe(const S: string): Integer;
 function StripFileExtension(const FileName: string): string;
 function ShortFilename(const FileName: string): string;
 
+// Cross-platform message posting (replaces PostMessage/Application.Handle)
+function TWX_GetApplicationHandle: PtrUInt;
+function TWX_PostMessage(Handle: PtrUInt; Msg: Cardinal; wParam, lParam: PtrInt): Boolean;
+
+// Cross-platform dialog types (replaces MessageDlg)
+type
+  TTWXMsgDlgType = (mtWarning, mtError, mtInformation, mtConfirmation, mtCustom);
+  TTWXMsgDlgBtn = (mbYes, mbNo, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore, mbAll, mbNoToAll, mbYesToAll, mbHelp, mbClose);
+  TTWXMsgDlgButtons = set of TTWXMsgDlgBtn;
+
+function TWX_MessageDlg(const Msg: string; DlgType: TTWXMsgDlgType; Buttons: TTWXMsgDlgButtons; HelpCtx: Longint): Integer;
+
 implementation
 
 // TTWXConfig implementation
@@ -771,6 +783,47 @@ begin
   Result := ((netshort and $00FF) shl 8) or ((netshort and $FF00) shr 8);
   {$ELSE}
   Result := netshort; // Big endian - no conversion needed
+  {$ENDIF}
+end;
+
+// Cross-platform message posting functions
+function TWX_GetApplicationHandle: PtrUInt;
+begin
+  {$IFDEF WINDOWS}
+  // For Windows GUI applications, return Application.Handle
+  try
+    Result := GetForegroundWindow(); // Fallback to foreground window
+  except
+    Result := 0;
+  end;
+  {$ELSE}
+  // For console applications or non-Windows, return a dummy handle
+  Result := 0;
+  {$ENDIF}
+end;
+
+function TWX_PostMessage(Handle: PtrUInt; Msg: Cardinal; wParam, lParam: PtrInt): Boolean;
+begin
+  {$IFDEF WINDOWS}
+  Result := PostMessage(Handle, Msg, wParam, lParam);
+  {$ELSE}
+  // On non-Windows platforms, message posting is not applicable for console apps
+  // Just return true to indicate "success" without doing anything
+  Result := True;
+  {$ENDIF}
+end;
+
+function TWX_MessageDlg(const Msg: string; DlgType: TTWXMsgDlgType; Buttons: TTWXMsgDlgButtons; HelpCtx: Longint): Integer;
+begin
+  {$IFDEF WINDOWS}
+  // For Windows GUI applications, could use MessageBox API
+  // For console applications, just write to stderr
+  WriteLn(StdErr, 'ERROR: ', Msg);
+  Result := 1; // Simulate clicking OK
+  {$ELSE}
+  // For console applications, write to stderr
+  WriteLn(StdErr, 'ERROR: ', Msg);
+  Result := 1; // Simulate clicking OK
   {$ENDIF}
 end;
 

@@ -72,6 +72,7 @@ uses
   ExtCtrls,
   Contnrs,
   Menus,
+  Forms,
   Observer,
   ScriptCmp,
   ScriptRef,
@@ -283,7 +284,6 @@ uses
   Global,
   Utility,
   Menu,
-  Forms,
   {$IFDEF WINDOWS}Windows,{$ENDIF}
   Ansi;
 

@@ -1574,7 +1574,7 @@ begin
 
     Socket.SendText(endl);
 
-    if TWXDatabase.DataBaseOpen then
+    if TWXDatabase.DatabaseOpen then
       Socket.SendText(ANSI_10 + 'Using Database ' + ANSI_14 + TWXDatabase.DatabaseName + ANSI_10 + ' w/ ' +
                       ANSI_14 + IntToStr(TWXDatabase.DBHeader.Sectors) + ANSI_10 + ' sectors and ' +
                       ANSI_14 + IntToStr(TWXDatabase.WarpCount) + ANSI_10 + ' warps' + endl);

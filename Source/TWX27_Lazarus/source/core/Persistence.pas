@@ -29,7 +29,7 @@ interface
 uses
   SysUtils,
   {$IFDEF WINDOWS}Windows,{$ENDIF}
-  Dialogs,
+  LazarusCompat,
   Contnrs,
   Classes,
   Core;
@@ -131,7 +131,7 @@ begin
       end;
     end;
   except
-    MessageDlg('Exception occured saving module states.', mtError, [mbOK], 0);
+    TWX_MessageDlg('Exception occured saving module states.', mtError, [mbOK], 0);
     exit;
 //  finally
   end;

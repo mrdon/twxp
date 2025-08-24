@@ -25,7 +25,7 @@ received this source in.
 // This unit controls all database access.
 
 unit
-  DataBase;
+  Database;
 
 interface
 

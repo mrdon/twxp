@@ -27,8 +27,10 @@ unit FormSetup;
 interface
 
 uses
-  Core, {$IFDEF WINDOWS}Windows, Messages, ShellAPI,{$ENDIF} SysUtils, Classes, Graphics, Controls,
-  Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, Database, Persistence,
+  Core, 
+  {$IFDEF WINDOWS}Windows, Messages, ShellAPI,{$ENDIF} 
+  SysUtils, Classes, Graphics, Controls,
+  Forms, Dialogs, LazarusCompat, StdCtrls, ComCtrls, ExtCtrls, Database, Persistence,
   StrUtils;
 
 type
@@ -336,7 +338,7 @@ begin
 
   if (tmrReg.Enabled) then
   begin
-    MessageDlg('You must write your registration down first!', mtWarning, [mbOK], 0);
+    TWX_MessageDlg('You must write your registration down first!', mtWarning, [mbOK], 0);
     Exit;
   end;
 
@@ -357,7 +359,7 @@ begin
           FileOpen := TRUE;
           BlockWrite(F, TDatabaseLink(DataLinkList[I]^).DataHeader, SizeOf(TDataHeader));
         except
-          MessageDlg('An error occured while trying to update the database '''
+          TWX_MessageDlg('An error occured while trying to update the database '''
             + TDatabaseLink(DataLinkList[I]^).Filename + ''', no changes were made.', mtError,
             [mbOk], 0);
         end;
@@ -598,7 +600,7 @@ begin
 
   if (Error <> '') then
   begin
-    MessageDlg(Error, mtError, [mbOk], 0);
+    TWX_MessageDlg(Error, mtError, [mbOK], 0);
     Focus.SetFocus;
     Exit;
   end;
@@ -637,7 +639,7 @@ begin
     // MB - if sectors has changed, we must warn user.
     if (Head^.Sectors <> Sectors) then
     begin
-    if (MessageDlg('Resizing this database will delete all data. Are you sure?', mtWarning, [mbYes, mbNo], 0) = mrNo) then
+    if (TWX_MessageDlg('Resizing this database will delete all data. Are you sure?', mtWarning, [mbYes, mbNo], 0) = mrNo) then
     begin
       // MB - Don't resize database and keep previous sector count.
       Sectors := Head^.Sectors;
@@ -663,14 +665,14 @@ begin
 
     // close the current database if it is being deleted
     if S = DB then
-      TWXDatabase.CloseDataBase;
+      TWXDatabase.CloseDatabase;
 
     // Cross-platform database lock check
     {$IFDEF WINDOWS}
     HFileRes := CreateFile(PChar(S),GENERIC_READ or GENERIC_WRITE,0,nil,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
     if HFileRes = INVALID_HANDLE_VALUE then
     Begin
-      MessageDlg('Error - Database is locked by another instance.', mtWarning, [mbOK], 0);
+      TWX_MessageDlg('Error - Database is locked by another instance.', mtWarning, [mbOK], 0);
       Exit;
     End;
     CloseHandle(HFileRes);
@@ -678,7 +680,7 @@ begin
     // On Linux/Unix, use basic file existence check
     if not FileExists(S) then
     Begin
-      MessageDlg('Error - Database file not found.', mtWarning, [mbOK], 0);
+      TWX_MessageDlg('Error - Database file not found.', mtWarning, [mbOK], 0);
       Exit;
     End;
     {$ENDIF}
@@ -723,7 +725,7 @@ begin
     DoCreate := TRUE;
 
     if (FileExists(S)) then
-      if (MessageDlg(S + #13 + 'This database already exists.' + #13 + #13 + 'Replace existing file?', mtWarning, [mbYes, mbNo], 0) = mrNo) then
+      if (TWX_MessageDlg(S + #13 + 'This database already exists.' + #13 + #13 + 'Replace existing file?', mtWarning, [mbYes, mbNo], 0) = mrNo) then
         DoCreate := FALSE;
 
     if (DoCreate) then
@@ -731,7 +733,7 @@ begin
       try
         TWXDatabase.CreateDatabase(S, Head^);
       except
-        MessageDlg('An error occured while trying to create the database', mtError, [mbOK], 0);
+        TWX_MessageDlg('An error occured while trying to create the database', mtError, [mbOK], 0);
         cbGames.OnChange (Self);
         Exit;
       end;
@@ -894,7 +896,7 @@ var
 begin
   if (cbGames.ItemIndex > -1) then
   begin
-    Result := MessageDlg('Are you sure you want to reset this database?', mtWarning, [mbYes, mbNo], 0);
+    Result := TWX_MessageDlg('Are you sure you want to reset this database?', mtWarning, [mbYes, mbNo], 0);
     if (Result = mrNo) then
       Exit;
 
@@ -915,14 +917,14 @@ begin
 
     // close the current database if it is being deleted
     if S = DB then
-      TWXDatabase.CloseDataBase;
+      TWXDatabase.CloseDatabase;
 
     // Cross-platform database lock check
     {$IFDEF WINDOWS}
     HFileRes := CreateFile(PChar(S),GENERIC_READ or GENERIC_WRITE,0,nil,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
     if HFileRes = INVALID_HANDLE_VALUE then
     Begin
-      MessageDlg('Error - Database is locked by another instance.', mtWarning, [mbOK], 0);
+      TWX_MessageDlg('Error - Database is locked by another instance.', mtWarning, [mbOK], 0);
       Exit;
     End;
     CloseHandle(HFileRes);
@@ -930,7 +932,7 @@ begin
     // On Linux/Unix, use basic file existence check
     if not FileExists(S) then
     Begin
-      MessageDlg('Error - Database file not found.', mtWarning, [mbOK], 0);
+      TWX_MessageDlg('Error - Database file not found.', mtWarning, [mbOK], 0);
       Exit;
     End;
     {$ENDIF}
@@ -955,7 +957,7 @@ begin
     try
       TWXDatabase.CreateDatabase(S, Head^);
     except
-      MessageDlg('An error occured while trying to create the database', mtError, [mbOK], 0);
+      TWX_MessageDlg('An error occured while trying to create the database', mtError, [mbOK], 0);
       cbGames.OnChange (Self);
       Exit;
     end;
@@ -971,7 +973,7 @@ var
 begin
   if (cbGames.ItemIndex > -1) then
   begin
-    Result := MessageDlg('Are you sure you want to delete this database?', mtWarning, [mbYes, mbNo], 0);
+    Result := TWX_MessageDlg('Are you sure you want to delete this database?', mtWarning, [mbYes, mbNo], 0);
 
     if (Result = mrNo) then
       Exit;
@@ -982,14 +984,14 @@ begin
 
     // close the current database if it is being deleted
     if S = DB then
-      TWXDatabase.CloseDataBase;
+      TWXDatabase.CloseDatabase;
 
     // Cross-platform database lock check
     {$IFDEF WINDOWS}
     HFileRes := CreateFile(PChar(S),GENERIC_READ or GENERIC_WRITE,0,nil,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
     if HFileRes = INVALID_HANDLE_VALUE then
     Begin
-      MessageDlg('Error - Database is locked by another instance.', mtWarning, [mbOK], 0);
+      TWX_MessageDlg('Error - Database is locked by another instance.', mtWarning, [mbOK], 0);
       Exit;
     End;
     CloseHandle(HFileRes);
@@ -997,7 +999,7 @@ begin
     // On Linux/Unix, use basic file existence check
     if not FileExists(S) then
     Begin
-      MessageDlg('Error - Database file not found.', mtWarning, [mbOK], 0);
+      TWX_MessageDlg('Error - Database file not found.', mtWarning, [mbOK], 0);
       Exit;
     End;
     {$ENDIF}
@@ -1037,7 +1039,7 @@ var
   Result : Integer;
   searchFile : TSearchRec;
 begin
-    Result := MessageDlg('Clear script data files for this database?', mtWarning, [mbYes, mbNo], 0);
+    Result := TWX_MessageDlg('Clear script data files for this database?', mtWarning, [mbYes, mbNo], 0);
     if (Result = mrNo) then
       Exit;
 
@@ -1132,7 +1134,7 @@ procedure TfrmSetup.PageControlChanging(Sender: TObject; var AllowChange: Boolea
 begin
   if (tmrReg.Enabled) then
   begin
-    MessageDlg('You must write your registration down first!', mtWarning, [mbOK], 0);
+    TWX_MessageDlg('You must write your registration down first!', mtWarning, [mbOK], 0);
 
     AllowChange := FALSE;
   end;
@@ -1142,7 +1144,7 @@ procedure TfrmSetup.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   if (tmrReg.Enabled) then
   begin
-    MessageDlg('You must write your registration down first!', mtWarning, [mbOK], 0);
+    TWX_MessageDlg('You must write your registration down first!', mtWarning, [mbOK], 0);
     CloseAction := caNone;
     Exit;
   end;

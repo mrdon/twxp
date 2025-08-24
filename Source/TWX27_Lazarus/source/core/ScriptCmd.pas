@@ -53,7 +53,7 @@ uses
   SysUtils,
   {$IFDEF WINDOWS}ShellApi,{$ENDIF}
   Menu,
-  DataBase,
+  Database,
   Utility,
   {$IFDEF WINDOWS}MMSystem,{$ENDIF}
   Script,
@@ -3430,7 +3430,7 @@ begin
   // CMD: LoadDatabase <filename> <script>
   Database := StripFileExtension(ShortFilename(Params[0].Value));
 
-  TWXDatabase.CloseDataBase;
+  TWXDatabase.CloseDatabase;
   TWXDatabase.OpenDatabase('data\' + Database + '.xdb');
   Result := caNone;
 end;

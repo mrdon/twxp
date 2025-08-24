@@ -33,7 +33,7 @@ uses
   Core,
   Observer,
   SysUtils,
-  DataBase,
+  Database,
   StrUtils,
   INIFiles,
   Classes;
@@ -1526,7 +1526,7 @@ begin
     begin
       // User trying to access database while not connected
 
-      if not (TWXDatabase.DataBaseOpen) then
+      if not (TWXDatabase.DatabaseOpen) then
         TWXServer.ClientMessage(endl + ANSI_12 + 'Warning: This database is corrupt or does not exist.  No data is available.' + ANSI_7 + endl);
     end;
 

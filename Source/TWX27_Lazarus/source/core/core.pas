@@ -217,7 +217,6 @@ procedure PostNotification(Event: TNotificationEvent; Param: Pointer);
 implementation
 
 uses
-  Forms,
   Persistence;
 
 
@@ -229,8 +228,8 @@ var
 begin
 {$IFDEF WINDOWS}
   New(PEvent);
-  CopyMemory(PEvent, @@Event, SizeOf(TNotificationEvent));
-  PostMessage(Application.Handle, WM_USER, Integer(PEvent), Integer(Param));
+  TWX_CopyMemory(PEvent, @@Event, SizeOf(TNotificationEvent));
+  TWX_PostMessage(TWX_GetApplicationHandle, WM_USER, Integer(PEvent), Integer(Param));
 {$ENDIF}
 end;
 

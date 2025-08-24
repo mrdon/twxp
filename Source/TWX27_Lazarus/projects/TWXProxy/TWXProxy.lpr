@@ -28,6 +28,7 @@ uses
   {$IFDEF UNIX}
   cthreads,
   {$ENDIF}
+  Interfaces, // LCL widgetset
   Classes,
   SysUtils,
   Forms,

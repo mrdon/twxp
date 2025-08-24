@@ -2270,7 +2270,7 @@ begin
         Name := StripFileExtension(S.Name);
         Sectors := IntToStr(Head.Sectors);
 
-        if (UpperCase('data\' + Name + '.xdb') = UpperCase(TWXDatabase.DatabaseName)) and (TWXDatabase.DataBaseOpen) then
+        if (UpperCase('data\' + Name + '.xdb') = UpperCase(TWXDatabase.DatabaseName)) and (TWXDatabase.DatabaseOpen) then
           Col := MENU_MID
         else
           Col := MENU_DARK;

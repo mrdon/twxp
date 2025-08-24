@@ -554,7 +554,7 @@ var
   S        : TSector;
   Filename : String;
 begin
-  if not (TWXDatabase.DataBaseOpen) then
+  if not (TWXDatabase.DatabaseOpen) then
   begin
     MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
@@ -676,7 +676,7 @@ var
   I,
   X    : Integer;
 begin
-  if not (TWXDatabase.DataBaseOpen) then
+  if not (TWXDatabase.DatabaseOpen) then
   begin
     MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
@@ -776,7 +776,7 @@ var
   F        : TextFile;
   Filename : String;
 begin
-  if not (TWXDatabase.DataBaseOpen) then
+  if not (TWXDatabase.DatabaseOpen) then
   begin
     MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
@@ -830,7 +830,7 @@ var
   Filename  : String;
   WarpsIn   : TList;
 begin
-  if not (TWXDatabase.DataBaseOpen) then
+  if not (TWXDatabase.DatabaseOpen) then
   begin
     MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
@@ -891,7 +891,7 @@ end;
 
 procedure TfrmMain.miExportTWXClick(Sender: TObject);
 begin
-  if not (TWXDatabase.DataBaseOpen) then
+  if not (TWXDatabase.DatabaseOpen) then
   begin
     MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
@@ -929,7 +929,7 @@ var
 begin
   // import data from TWX file into active database
 
-  if not (TWXDatabase.DataBaseOpen) then
+  if not (TWXDatabase.DatabaseOpen) then
   begin
     MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
