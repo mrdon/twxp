@@ -47,7 +47,6 @@ object frmMain: TfrmMain
   end
   object mnuPopup: TPopupMenu
     Images = imageList
-    OnChange = popupChanged
     OnPopup = popupShown
     Left = 40
     Top = 8

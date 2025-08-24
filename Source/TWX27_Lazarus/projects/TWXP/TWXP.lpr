@@ -25,41 +25,12 @@ received this source in.
 program TWXP;
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  {$IFDEF UNIX}
   cthreads,
-  {$ENDIF}{$ENDIF}
+  {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms,
-  Classes,
-  {$IFDEF WINDOWS}Windows,{$ENDIF}
-  SysUtils,
-  Core,
-  FormMain,
-  FormAbout,
-  FormSetup,
-  FormHistory,
-  FormLicense,
-  FormUpgrade,
-  FormScript,
-  FormChangeIcon,
-  GUI,
-  Menu,
-  Database,
-  TCP,
-  TWXProcess,
-  Script,
-  ScriptCmd,
-  ScriptCmp,
-  ScriptRef,
-  Utility,
-  Global,
-  Observer,
-  Log,
-  Bubble,
-  Persistence,
-  Ansi,
-  Encryptor,
-  LazarusCompat;
+  FormMain;
 
 {$R *.res}
 

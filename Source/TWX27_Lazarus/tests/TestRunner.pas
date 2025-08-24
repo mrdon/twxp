@@ -3,11 +3,15 @@ program TestRunner;
 {$mode objfpc}{$H+}
 
 uses
+  {$IFDEF UNIX}
+  cthreads,
+  {$ENDIF}
   Classes, SysUtils, consoletestrunner,
   // Import all test units
   TestLazarusCompat,
   TestTCP,
-  TestNetworking;
+  TestNetworking,
+  TestTradeWarsIntegration;
 
 type
   TTWXTestRunner = class(TTestRunner)
@@ -25,6 +29,7 @@ begin
   WriteLn('- LazarusCompat: Cross-platform abstraction layer');
   WriteLn('- TCP: Network communication layer');
   WriteLn('- Networking: Phase 1C network layer validation');
+  WriteLn('- TradeWarsIntegration: Real server connectivity tests');
   WriteLn('- Configuration system');
   WriteLn('- File operations');
   WriteLn('- Hardware identification');

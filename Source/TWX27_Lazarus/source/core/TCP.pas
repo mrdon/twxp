@@ -700,7 +700,7 @@ begin
   inherited Create(nil);
   FIsServer := False;
   FConnectedClients := nil;
-  FClientLock := nil;
+  FClientLock := TCriticalSection.Create; // Initialize lock for thread safety
 end;
 
 constructor TTWXSynapseSocketEx.CreateFromSocket(Socket: TTCPBlockSocket);
@@ -708,7 +708,7 @@ begin
   inherited Create(Socket);
   FIsServer := False;
   FConnectedClients := nil;
-  FClientLock := nil;
+  FClientLock := TCriticalSection.Create; // Initialize lock for client connections
 end;
 
 destructor TTWXSynapseSocketEx.Destroy;
@@ -1683,7 +1683,9 @@ begin
   // process telnet commands
   InString := ProcessTelnet(InString, Socket);
 
-  // TODO Process ANSI response for cursor position, screen size, scroll region, etc...
+  // ANSI/VT100 escape sequence processing
+  // Phase 1: Basic sequence filtering implemented below
+  // Future enhancement: Full ANSI cursor position, screen size, and scroll region processing
 
   // Ignore ANSI/VT100 Status report
   if ContainsText(InString, #27 + '[0n') then

@@ -81,41 +81,12 @@ procedure TWX_SetForegroundWindow(WindowHandle: PtrUInt);
 procedure TWX_ZeroMemory(Destination: Pointer; Length: PtrUInt);
 procedure TWX_CopyMemory(Destination, Source: Pointer; Length: PtrUInt);
 
-// Cross-platform authentication socket operations
-type
-  TTWXAuthSocket = class
-  private
-    {$IFDEF WINDOWS}
-    FWinSocket: TClientSocket;
-    {$ELSE}
-    // Could use Synapse TCPBlockSocket or other cross-platform socket
-    FConnected: Boolean;
-    FHost: string;
-    FPort: Integer;
-    {$ENDIF}
-    FOnConnect: TNotifyEvent;
-    FOnRead: TNotifyEvent; 
-    FOnError: TNotifyEvent;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    
-    procedure Connect;
-    procedure Disconnect;
-    procedure Open;
-    procedure Close;
-    procedure SendText(const Text: string);
-    function ReceiveText: string;
-    
-    property Host: string read FHost write FHost;
-    property Port: Integer read FPort write FPort;
-    property Address: string read FHost write FHost;  // Alias for Host
-    function GetConnected: Boolean;
-    property Connected: Boolean read GetConnected;
-    property OnConnect: TNotifyEvent read FOnConnect write FOnConnect;
-    property OnRead: TNotifyEvent read FOnRead write FOnRead;
-    property OnError: TNotifyEvent read FOnError write FOnError;
-  end;
+// Network byte order conversion functions
+function TWX_htonl(hostlong: Cardinal): Cardinal;
+function TWX_htons(hostshort: Word): Word;
+function TWX_ntohl(netlong: Cardinal): Cardinal;
+function TWX_ntohs(netshort: Word): Word;
+
 
 // Cross-platform file operations
 function TWX_DirectoryExists(const Directory: string): Boolean;
@@ -760,98 +731,46 @@ begin
   Move(Source^, Destination^, Length);
 end;
 
-// TTWXAuthSocket implementation
-constructor TTWXAuthSocket.Create;
+// Network byte order conversion functions
+function TWX_htonl(hostlong: Cardinal): Cardinal;
 begin
-  inherited Create;
-  {$IFDEF WINDOWS}
-  FWinSocket := TClientSocket.Create(nil);
+  {$IFDEF ENDIAN_LITTLE}
+  Result := ((hostlong and $000000FF) shl 24) or
+            ((hostlong and $0000FF00) shl 8) or
+            ((hostlong and $00FF0000) shr 8) or
+            ((hostlong and $FF000000) shr 24);
   {$ELSE}
-  FConnected := False;
-  FHost := '';
-  FPort := 80;
+  Result := hostlong; // Big endian - no conversion needed
   {$ENDIF}
 end;
 
-destructor TTWXAuthSocket.Destroy;
+function TWX_htons(hostshort: Word): Word;
 begin
-  {$IFDEF WINDOWS}
-  if Assigned(FWinSocket) then
-  begin
-    FWinSocket.Active := False;
-    FWinSocket.Free;
-  end;
-  {$ENDIF}
-  inherited Destroy;
-end;
-
-function TTWXAuthSocket.GetConnected: Boolean;
-begin
-  {$IFDEF WINDOWS}
-  Result := Assigned(FWinSocket) and FWinSocket.Active;
+  {$IFDEF ENDIAN_LITTLE}
+  Result := ((hostshort and $00FF) shl 8) or ((hostshort and $FF00) shr 8);
   {$ELSE}
-  Result := FConnected;
+  Result := hostshort; // Big endian - no conversion needed
   {$ENDIF}
 end;
 
-procedure TTWXAuthSocket.Connect;
+function TWX_ntohl(netlong: Cardinal): Cardinal;
 begin
-  {$IFDEF WINDOWS}
-  if Assigned(FWinSocket) then
-  begin
-    FWinSocket.Host := FHost;
-    FWinSocket.Port := FPort;
-    FWinSocket.Active := True;
-  end;
+  {$IFDEF ENDIAN_LITTLE}
+  Result := ((netlong and $000000FF) shl 24) or
+            ((netlong and $0000FF00) shl 8) or
+            ((netlong and $00FF0000) shr 8) or
+            ((netlong and $FF000000) shr 24);
   {$ELSE}
-  // Cross-platform implementation would use Synapse or other socket library
-  // For now, just mark as connected for compilation
-  FConnected := True;
-  if Assigned(FOnConnect) then
-    FOnConnect(Self);
+  Result := netlong; // Big endian - no conversion needed
   {$ENDIF}
 end;
 
-procedure TTWXAuthSocket.Disconnect;
+function TWX_ntohs(netshort: Word): Word;
 begin
-  {$IFDEF WINDOWS}
-  if Assigned(FWinSocket) then
-    FWinSocket.Active := False;
+  {$IFDEF ENDIAN_LITTLE}
+  Result := ((netshort and $00FF) shl 8) or ((netshort and $FF00) shr 8);
   {$ELSE}
-  FConnected := False;
-  {$ENDIF}
-end;
-
-procedure TTWXAuthSocket.Open;
-begin
-  Connect;  // Alias for Connect
-end;
-
-procedure TTWXAuthSocket.Close;
-begin
-  Disconnect;  // Alias for Disconnect
-end;
-
-procedure TTWXAuthSocket.SendText(const Text: string);
-begin
-  {$IFDEF WINDOWS}
-  if Assigned(FWinSocket) and FWinSocket.Active then
-    FWinSocket.Socket.SendText(Text);
-  {$ELSE}
-  // Cross-platform implementation would send via socket
-  {$ENDIF}
-end;
-
-function TTWXAuthSocket.ReceiveText: string;
-begin
-  {$IFDEF WINDOWS}
-  if Assigned(FWinSocket) and FWinSocket.Active then
-    Result := FWinSocket.Socket.ReceiveText
-  else
-    Result := '';
-  {$ELSE}
-  // Cross-platform implementation would receive via socket
-  Result := '';
+  Result := netshort; // Big endian - no conversion needed
   {$ENDIF}
 end;
 

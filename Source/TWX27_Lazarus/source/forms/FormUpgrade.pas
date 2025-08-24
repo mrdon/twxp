@@ -28,9 +28,13 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, LazarusCompat,
-  StdCtrls, ExtCtrls, Auth;
+  StdCtrls, ExtCtrls;
 
 type
+  // Auth-related types (copied from deleted Auth unit)
+  TUpgradeResult = (urSuccess, urInvalid, urUsed, urFailed, urUnknown);
+  TUpgradeDoneEvent = procedure(Result : TUpgradeResult; NewUser, NewKey : string) of object;
+
   TfrmUpgrade = class(TForm)
     memHint2: TMemo;
     pnlUpgrade: TPanel;

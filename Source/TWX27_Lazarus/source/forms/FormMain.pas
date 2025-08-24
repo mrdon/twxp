@@ -139,8 +139,6 @@ type
     procedure miHelpScriptClick(Sender: TObject);
     procedure miHelpPack2Click(Sender: TObject);
     procedure miPlayLogClick(Sender: TObject);
-    procedure popupChanged(Sender: TObject; Source: TMenuItem;
-      Rebuild: Boolean);
     procedure popupShown(Sender: TObject);
     procedure miUpdateNowClick(Sender: TObject);
     procedure miUpdateCheckClick(Sender: TObject);
@@ -188,7 +186,7 @@ uses
   Global,
   GUI,
   Utility,
-  // TWXExport, // TODO: Phase 2 Task 2.2 - Convert to cross-platform
+  TWXExport, // Cross-platform export functionality enabled
   Ansi,
   Registry,
   inifiles,
@@ -207,7 +205,13 @@ begin
   MainIcon := TIcon.Create;
 
   Top := -100;
-  FProgramDir := (Owner as TModGUI).ProgramDir;
+  
+  // Handle different owner types safely
+  if Assigned(Owner) and (Owner is TModGUI) then
+    FProgramDir := (Owner as TModGUI).ProgramDir
+  else
+    FProgramDir := ExtractFilePath(ParamStr(0)); // Use executable directory as fallback
+    
   LoadingScript := FALSE;
   miStop.Visible := False;
   miStopAll.Visible := False;
@@ -906,8 +910,8 @@ begin
         Exit;
 
     try
-      // ExportTWXFile(SaveDialog.Filename); // TODO: Phase 2 Task 2.2 - Convert to cross-platform
-      MessageDlg('TWX Export functionality not yet available on this platform.', mtInformation, [mbOK], 0);
+      ExportTWXFile(SaveDialog.Filename); // Cross-platform export functionality enabled
+      MessageDlg('TWX file exported successfully.', mtInformation, [mbOK], 0);
     except
       MessageDlg('An error occured while attempting to export data from the selected database', mtError, [mbOK], 0);
       Exit;
@@ -942,8 +946,8 @@ begin
     Errored := FALSE;
 
     try
-      // ImportTWXFile(OpenDialog.Filename, KeepRecent); // TODO: Phase 2 Task 2.2 - Convert to cross-platform
-      MessageDlg('TWX Import functionality not yet available on this platform.', mtInformation, [mbOK], 0);
+      ImportTWXFile(OpenDialog.Filename, KeepRecent); // Cross-platform import functionality enabled
+      MessageDlg('TWX file imported successfully.', mtInformation, [mbOK], 0);
     except
       MessageDlg('An error occured while attempting to import data from the selected file', mtError, [mbOK], 0);
       Errored := TRUE;
@@ -1236,11 +1240,6 @@ begin
   TWXInterpreter.StopByHandle(TScriptMenuItem(Sender).Script);
 end;
 
-procedure TfrmMain.popupChanged(Sender: TObject; Source: TMenuItem;
-  Rebuild: Boolean);
-begin
-    popupVisable := false;
-end;
 
 procedure TfrmMain.popupShown(Sender: TObject);
 var

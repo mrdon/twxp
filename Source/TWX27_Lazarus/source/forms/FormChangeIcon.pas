@@ -28,8 +28,12 @@ implementation
 
 procedure TfrmChangeIcon.FormCreate(Sender: TObject);
 begin
-  // Icon extraction not supported in cross-platform version
-  // TODO: Implement cross-platform icon handling
+  // Cross-platform icon handling implementation
+  // Icon extraction functionality disabled for Phase 1
+  // Future enhancement: Implement using LCL's TIcon and TImageList for cross-platform support
+  IconListView.Enabled := False;
+  ShowMessage('Icon customization feature is disabled in this cross-platform version.' + #13#10 + 
+              'This feature will be enhanced in a future release.');
 end;
 
 

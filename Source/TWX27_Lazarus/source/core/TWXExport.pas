@@ -32,10 +32,7 @@ uses
   Core,
   SysUtils,
   Database,
-  {$IFDEF WINDOWS}
-  Windows,
-  Winsock,
-  {$ENDIF}
+  LazarusCompat,
   Dialogs,
   Utility;
 
@@ -103,7 +100,7 @@ begin
     Result := Result xor Integer(P^);
 
     Dec(ByteLen, 4);
-    P := Pointer(Integer(P) + 4);
+    P := Pointer(PtrUInt(P) + 4);
   end;
 end;
 
@@ -117,17 +114,17 @@ var
   Sects  : array of TExportSector;
   Sector : TSector;
 begin
-  CopyMemory(@(Head.id), PChar('TWEX'), 4);
-  Head.time_created := htonl(ConvertToCTime(Now));
-  Head.ver := htonl(1);
-  Head.sectors := htonl(TWXDatabase.DBHeader.Sectors);
-  Head.stardock := htonl(TWXDatabase.DBHeader.StarDock);
-  Head.cls0port_sol := htonl(-1);
-  Head.cls0port_alpha := htonl(-1);
-  Head.cls0port_rylos := htonl(-1);
+  TWX_CopyMemory(@(Head.id), PChar('TWEX'), 4);
+  Head.time_created := TWX_htonl(ConvertToCTime(Now));
+  Head.ver := TWX_htonl(1);
+  Head.sectors := TWX_htonl(TWXDatabase.DBHeader.Sectors);
+  Head.stardock := TWX_htonl(TWXDatabase.DBHeader.StarDock);
+  Head.cls0port_sol := TWX_htonl(Cardinal(-1));
+  Head.cls0port_alpha := TWX_htonl(Cardinal(-1));
+  Head.cls0port_rylos := TWX_htonl(Cardinal(-1));
   Head.crc32 := 0;
 
-  ZeroMemory(@(Head.reserved), Length(Head.reserved));
+  TWX_ZeroMemory(@(Head.reserved), Length(Head.reserved));
   Crc := GetCrc(@Head, SizeOf(Head));
 
   SetLength(Sects, TWXDatabase.DBHeader.Sectors);
@@ -151,9 +148,9 @@ begin
     if (Sector.UpDate = 0) then
       Sects[I].sector_update := 0
     else
-      Sects[I].sector_update := htonl(ConvertToCTime(Sector.UpDate));
+      Sects[I].sector_update := TWX_htonl(ConvertToCTime(Sector.UpDate));
 
-    Sects[I].ftrs := htonl(Sector.Figs.Quantity);
+    Sects[I].ftrs := TWX_htonl(Sector.Figs.Quantity);
     Sects[I].ftr_owner := -1;
 
     if (Sector.Figs.Quantity = 0) then
@@ -172,16 +169,16 @@ begin
     else
       Sects[I].anom := 0;
 
-    Sects[I].armids := htons(Sector.Mines_Armid.Quantity);
+    Sects[I].armids := TWX_htons(Sector.Mines_Armid.Quantity);
     Sects[I].armid_owner := -1;
 
-    Sects[I].limpets := htons(Sector.Mines_Limpet.Quantity);
+    Sects[I].limpets := TWX_htons(Sector.Mines_Limpet.Quantity);
     Sects[I].limpet_owner := -1;
 
     if (Sector.SPort.ClassIndex = 0) then
     begin
       for J := 0 to 2 do
-        Sects[I].port_amt[J] := htonl(-1);
+        Sects[I].port_amt[J] := TWX_htonl(Cardinal(-1));
 
       for J := 0 to 2 do
         Sects[I].port_per[J] := -1;
@@ -190,9 +187,9 @@ begin
     end
     else
     begin
-      Sects[I].port_amt[0] := htonl(Sector.SPort.ProductAmount[ptFuelOre]);
-      Sects[I].port_amt[1] := htonl(Sector.SPort.ProductAmount[ptOrganics]);
-      Sects[I].port_amt[2] := htonl(Sector.SPort.ProductAmount[ptEquipment]);
+      Sects[I].port_amt[0] := TWX_htonl(Sector.SPort.ProductAmount[ptFuelOre]);
+      Sects[I].port_amt[1] := TWX_htonl(Sector.SPort.ProductAmount[ptOrganics]);
+      Sects[I].port_amt[2] := TWX_htonl(Sector.SPort.ProductAmount[ptEquipment]);
 
       Sects[I].port_per[0] := Sector.SPort.ProductPercent[ptFuelOre];
       Sects[I].port_per[1] := Sector.SPort.ProductPercent[ptOrganics];
@@ -200,7 +197,7 @@ begin
       if (Sector.SPort.UpDate = 0) then
         Sects[I].port_update := 0
       else
-        Sects[I].port_update := htonl(ConvertToCTime(Sector.SPort.UpDate));
+        Sects[I].port_update := TWX_htonl(ConvertToCTime(Sector.SPort.UpDate));
 
     end;
 
@@ -210,11 +207,11 @@ begin
       Sects[I].warps := Sector.Warps;
 
     for J := 0 to 5 do
-      Sects[I].warp_sect[J] := htonl(Sector.Warp[J + 1]);
+      Sects[I].warp_sect[J] := TWX_htonl(Sector.Warp[J + 1]);
 
-    Sects[I].density := htonl(Sector.Density);
+    Sects[I].density := TWX_htonl(Sector.Density);
 
-    ZeroMemory(@(Sects[I].reserved), Length(Sects[I].reserved));
+    TWX_ZeroMemory(@(Sects[I].reserved), Length(Sects[I].reserved));
     Crc := Crc xor GetCrc(@(Sects[I]), SizeOf(TExportSector));
   end;
 
@@ -265,15 +262,15 @@ begin
     BlockRead(F, Head, SizeOf(TExportHeader));
     Crc := GetCrc(@Head, SizeOf(TExportHeader));
 
-    if (ntohl(Head.sectors) <> TWXDatabase.DBHeader.Sectors) then
+    if (TWX_ntohl(Head.sectors) <> TWXDatabase.DBHeader.Sectors) then
     begin
       MessageDlg('The currently selected database is of the wrong size (in sectors) for the file being imported.  Size of ' + IntToStr(Head.sectors) + ' is required.', mtError, [mbOK], 0);
       Exit;
     end;
 
-    if (ntohl(Head.ver) <> 1) then
+    if (TWX_ntohl(Head.ver) <> 1) then
     begin
-      MessageDlg('Version ' + IntToStr(ntohl(Head.ver)) + ' is not supported.', mtError, [mbOK], 0);
+      MessageDlg('Version ' + IntToStr(TWX_ntohl(Head.ver)) + ' is not supported.', mtError, [mbOK], 0);
       Exit;
     end;
 
@@ -297,7 +294,7 @@ begin
 
       // Increment through import warps to see if they already exist
       for J := 1 to Sects[I - 1].warps do begin
-        Focus := BaseZero(ntohl(Sects[I - 1].warp_sect[J - 1]));
+        Focus := BaseZero(TWX_ntohl(Sects[I - 1].warp_sect[J - 1]));
         if (Focus = 0) then Break;
         Exists := False;
         for K := 1 to 6 do begin
@@ -330,10 +327,10 @@ begin
       end;
 
       // go with the most up-to-date sector
-      if (BaseZero(ntohl(Sects[I - 1].sector_update)) = 0) then
+      if (BaseZero(TWX_ntohl(Sects[I - 1].sector_update)) = 0) then
         T := 0
       else
-        T := ConvertFromCTime(ntohl(Sects[I - 1].sector_update));
+        T := ConvertFromCTime(TWX_ntohl(Sects[I - 1].sector_update));
 
       if (T > S.UpDate) or not (KeepRecent) then
       begin
@@ -351,7 +348,7 @@ begin
         else if (Sects[I - 1].info = 11) then // 11 = Unexplored
         begin
           // unexplored sector
-          if (ntohl(Sects[I - 1].density) >= 0) then
+          if (TWX_ntohl(Sects[I - 1].density) >= 0) then
             S.Explored := etDensity
           // if warps exist in either source, then min Explored level is Calc
           else if (Sects[I - 1].warps > 0) or (S.Warps > 0) then
@@ -419,7 +416,7 @@ begin
         // Substitute zero for unknown (-1)
         S.NavHaz := BaseZero(Sects[I - 1].navhaz);
         S.Figs.Owner := 'Unknown';
-        S.Figs.Quantity := ntohl(Sects[I - 1].ftrs);
+        S.Figs.Quantity := TWX_ntohl(Sects[I - 1].ftrs);
 
         if (Sects[I - 1].ftr_type = 1) then
           S.Figs.FigType := ftToll
@@ -431,18 +428,18 @@ begin
           S.Figs.FigType := ftNone;
 
         S.Mines_Armid.Owner := 'Unknown';
-        if (ntohl(Sects[I - 1].armids) = -1) then begin
+        if (TWX_ntohl(Sects[I - 1].armids) = -1) then begin
           S.Mines_Armid.Quantity := 0;
         end
         else
-          S.Mines_Armid.Quantity := ntohs(Sects[I - 1].armids);
+          S.Mines_Armid.Quantity := TWX_ntohs(Sects[I - 1].armids);
 
         S.Mines_Limpet.Owner := 'Unknown';
-        if (ntohl(Sects[I - 1].limpets) = -1) then begin
+        if (TWX_ntohl(Sects[I - 1].limpets) = -1) then begin
           S.Mines_Limpet.Quantity := 0;
         end
         else
-          S.Mines_Limpet.Quantity := ntohs(Sects[I - 1].limpets);
+          S.Mines_Limpet.Quantity := TWX_ntohs(Sects[I - 1].limpets);
         if (S.Constellation = '') or (Copy(S.Constellation, 1, 3) = '???') then
           S.Constellation := '???' + ANSI_9 + ' (data import only)';
         S.Beacon := '';
@@ -453,13 +450,13 @@ begin
         else
           S.Anomaly := TRUE;
 
-        S.Density := ntohl(Sects[I - 1].density);
+        S.Density := TWX_ntohl(Sects[I - 1].density);
       end;
 
-      if (BaseZero(ntohl(Sects[I - 1].port_update)) = 0) then
+      if (BaseZero(TWX_ntohl(Sects[I - 1].port_update)) = 0) then
         T := 0
       else
-        T := ConvertFromCTime(ntohl(Sects[I - 1].port_update));
+        T := ConvertFromCTime(TWX_ntohl(Sects[I - 1].port_update));
 
       // Now import Port data based on Port Info Update Timestamp
       if (T > S.SPort.UpDate) or not (KeepRecent) then
@@ -467,9 +464,9 @@ begin
         S.SPort.ProductPercent[ptFuelOre] := BaseZero(Sects[I - 1].port_per[0]);
         S.SPort.ProductPercent[ptOrganics] := BaseZero(Sects[I - 1].port_per[1]);
         S.SPort.ProductPercent[ptEquipment] := BaseZero(Sects[I - 1].port_per[2]);
-        S.SPort.ProductAmount[ptFuelOre] := BaseZero(ntohl(Sects[I - 1].port_amt[0]));
-        S.SPort.ProductAmount[ptOrganics] := BaseZero(ntohl(Sects[I - 1].port_amt[1]));
-        S.SPort.ProductAmount[ptEquipment] := BaseZero(ntohl(Sects[I - 1].port_amt[2]));
+        S.SPort.ProductAmount[ptFuelOre] := BaseZero(TWX_ntohl(Sects[I - 1].port_amt[0]));
+        S.SPort.ProductAmount[ptOrganics] := BaseZero(TWX_ntohl(Sects[I - 1].port_amt[1]));
+        S.SPort.ProductAmount[ptEquipment] := BaseZero(TWX_ntohl(Sects[I - 1].port_amt[2]));
         S.SPort.UpDate := T;
       end;
       TWXDatabase.SaveSector(S, I, nil, nil, nil);

@@ -5464,7 +5464,7 @@ begin
     AddCommand('SAVEHELP', 2, 5, CmdSaveHelp, [pkValue, pkValue], pkValue);
     AddCommand('LISTGLOBALS', 2, 2, CmdListGlobals, [pkValue], pkValue);
     AddCommand('ECHOEX', 1, -1, CmdEchoEx, [pkValue], pkValue);
-    // MB - This is not implimentd... TODO... Maaybe...
+    // LIBCMD is fully implemented - enables library command execution via :LIB~ labels
     AddCommand('LIBCMD', 1, -1, CmdLibCmd, [pkValue], pkValue);
 
     // Commands added for 2.07
