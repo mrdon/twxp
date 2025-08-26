@@ -29,9 +29,9 @@ interface
 
 uses
   {$IFDEF WINDOWS}
-  Windows, LMessages,
+  Windows,
   {$ELSE}
-  LCLIntf, LMessages,
+  LCLIntf,
   {$ENDIF}
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls;

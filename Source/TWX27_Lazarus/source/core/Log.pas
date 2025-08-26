@@ -181,7 +181,7 @@ begin
     else
     begin
       ReAllocMem(Result, SizeOf(TLogEntry) + Result^.EntrySize - 1);
-      Buf := Pointer(Integer(Result) + SizeOf(TLogEntry) - 1);
+      Buf := Pointer(PtrUInt(Result) + SizeOf(TLogEntry) - 1);
       BlockRead(FPlayLogFile, Buf^, Result^.EntrySize);
 
       // Set the timer to play it

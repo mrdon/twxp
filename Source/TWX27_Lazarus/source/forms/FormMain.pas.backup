@@ -46,17 +46,19 @@ uses
   ComCtrls,
   {$IFDEF WINDOWS}CommCtrl,{$ENDIF}
   {$IFNDEF WINDOWS}LCLIntf, LCLType,{$ENDIF}
+  //TrayIcon,
   ImgList,
   FileCtrl,
+  //Encryptor,
   Bubble,
   Database,
+  //OverbyteICSTnCnx,
   Core,
   Script,
   ActnList,
   Variants{$IFDEF WINDOWS},
   ShellAPI,
-  WinInet{$ENDIF}
-;
+  WinInet{$ENDIF};
 
 type
   TScriptMenuItem = class(TMenuItem)
@@ -79,8 +81,8 @@ type
     miExit: TMenuItem;
     miView: TMenuItem;
     miStop: TMenuItem;
-    miQuick: TMenuItem;
-    miBot: TMenuItem;
+    miQuick:TMenuItem;
+    miBot:  TMenuItem;
     miLoad: TMenuItem;
     miData: TMenuItem;
     miRecording: TMenuItem;
@@ -101,6 +103,7 @@ type
     miExportBubble: TMenuItem;
     miExportDeadend: TMenuItem;
     trayIcon: TTrayIcon;
+    //Encryptor: TEncryptor;
     N6: TMenuItem;
     miExportTWX: TMenuItem;
     miImportTWX: TMenuItem;
@@ -121,6 +124,7 @@ type
     procedure miRecordingClick(Sender: TObject);
     procedure miReloadClick(Sender: TObject);
     procedure miLoadClick(Sender: TObject);
+
     procedure miHistoryClick(Sender: TObject);
     procedure trayIconDblClick(Sender: TObject);
     procedure tmrHideFormTimer(Sender: TObject);
@@ -141,7 +145,7 @@ type
     procedure updateTimerTick(Sender: TObject);
     procedure miStopSysClick(Sender: TObject);
     procedure miStopAllNonSysClick(Sender: TObject);
-
+const
   private
     LoadingScript : Boolean;
     FProgramDir   : string;
@@ -160,7 +164,6 @@ type
   public
     procedure LoadTrayIcon(const Value : string);
     constructor Create(AOwner : TComponent); override;
-    destructor Destroy; override;
 
     procedure AddWarp(var S : TSector; W : Word);
     procedure SetToolTip(ToolTip : string);
@@ -194,24 +197,23 @@ uses
 // *******************************************************
 // TfrmMain implementation
 
+
 constructor TfrmMain.Create(AOwner : TComponent);
 begin
   WriteLn('FormMain: Starting constructor');
-  // Use standard LCL form creation - this is the key fix!
-  inherited Create(AOwner);
-  WriteLn('FormMain: Standard Create successful - using LFM resources');
-
-  // Register custom menu item classes for LCL compatibility
-  RegisterClass(TScriptMenuItem);
-  RegisterClass(TQuickMenuItem);
+  // Try using CreateNew instead of Create to avoid LFM loading
+  inherited CreateNew(AOwner);
+  WriteLn('FormMain: CreateNew successful - bypassing LFM resource loading');
 
   MainIcon := TIcon.Create;
-  
-  // Initialize form properties
+
   Top := -100;
   
   // Handle different owner types safely
-  FProgramDir := ExtractFilePath(ParamStr(0)); // Use executable directory as fallback
+  //if Assigned(Owner) and (Owner is TModGUI) then
+  //  FProgramDir := (Owner as TModGUI).ProgramDir
+  //else
+    FProgramDir := ExtractFilePath(ParamStr(0)); // Use executable directory as fallback
     
   LoadingScript := FALSE;
   miStop.Visible := False;
@@ -221,27 +223,10 @@ begin
 
   LoadBotMenu();
   LoadQuickMenu();
-
-  WriteLn('FormMain: Constructor completed successfully');
 end;
 
-destructor TfrmMain.Destroy;
-begin
-  WriteLn('FormMain: Starting destructor');
-  
-{$IFDEF WINDOWS}
-  if LargeIcon <> 0 then
-    DestroyIcon(LargeIcon);
-  if SmallIcon <> 0 then
-    DestroyIcon(SmallIcon);
-{$ENDIF}
-  
-  if Assigned(MainIcon) then
-    MainIcon.Free;
-    
-  inherited Destroy;
-  WriteLn('FormMain: Destructor completed');
-end;
+//function SHGetImageList(iImageList: Integer; const riid: TGUID;
+//  var ppvObj: Pointer): HResult; stdcall; external shell32;
 
 function EnumRCDataProc(hModule: HMODULE; lpszType, lpszName: PChar; lParam:
     NativeInt): {$IFDEF WINDOWS}BOOL{$ELSE}Boolean{$ENDIF}; stdcall;
@@ -259,11 +244,8 @@ var
    SectionList,
    ScriptList  : TStringList;
 begin
-  {$IFDEF WINDOWS}
   IniFile := TIniFile.Create(FProgramDir + '\twxp.cfg');
-  {$ELSE}
-  IniFile := TIniFile.Create(FProgramDir + '/twxp.cfg');
-  {$ENDIF}
+
 
   try
     SectionList := TStringList.Create;
@@ -278,13 +260,8 @@ begin
           ScriptList := TStringList.Create;
           ExtractStrings([','], [], PChar(Script), ScriptList);
 
-          {$IFDEF WINDOWS}
           if FileExists (FProgramDir + '\scripts\' + ScriptList[0]) then
             AddBotMenu(BotName, Script);
-          {$ELSE}
-          if FileExists (FProgramDir + '/scripts/' + ScriptList[0]) then
-            AddBotMenu(BotName, Script);
-          {$ENDIF}
 
           ScriptList.Free;
         end;
@@ -307,21 +284,14 @@ var
   dirName    : String;
   dirList    : TStringList;
   Item       : TMenuItem;
-  scriptsPath : String;
 begin
-  {$IFDEF WINDOWS}
   IniFile := TIniFile.Create(FProgramDir + '\twxp.cfg');
-  scriptsPath := FProgramDir + '\scripts\';
-  {$ELSE}
-  IniFile := TIniFile.Create(FProgramDir + '/twxp.cfg');
-  scriptsPath := FProgramDir + '/scripts/';
-  {$ENDIF}
 
   dirList := TStringList.Create;
   dirList.Sorted := true;
   try
     // Process virtual directories based on 'name_' = 'virtual name' from twxp.cfg
-    if findfirst(scriptsPath + '*', faAnyFile, searchFile) = 0 then
+    if findfirst(FProgramDir + '\scripts\*', faAnyFile, searchFile) = 0 then
     repeat
       // skip directories
       if not ((searchFile.attr and faDirectory) = faDirectory) then
@@ -357,7 +327,7 @@ begin
 
   try
     // Process real file directories under scripts
-    if findfirst(scriptsPath + '*', faDirectory, searchDir) = 0 then
+    if findfirst(FProgramDir + '\scripts\*', faDirectory, searchDir) = 0 then
     repeat
       // Only show directories
       if (searchDir.attr and faDirectory) = faDirectory then
@@ -365,7 +335,7 @@ begin
         // Exclude undesired directories
         if (pos(Lowercase(searchDir.Name),'.,..,include,mombot,mombot3,Mombot4p,qubot,zedbot') = 0) then
         begin
-          if findfirst(scriptsPath + searchDir.Name + {$IFDEF WINDOWS}'\'{$ELSE}'/'{$ENDIF} + '*', faAnyFile, searchFile) = 0 then
+          if findfirst(FProgramDir + '\scripts\' + searchDir.Name + '\*', faAnyFile, searchFile) = 0 then
           repeat
             // skip directories
             if not ((searchFile.attr and faDirectory) = faDirectory) then
@@ -390,7 +360,7 @@ begin
 
   try
     // Process virtual directories based on 'name_' = 'virtual name' from twxp.cfg
-    if findfirst(scriptsPath + '*', faAnyFile, searchFile) = 0 then
+    if findfirst(FProgramDir + '\scripts\*', faAnyFile, searchFile) = 0 then
     repeat
       // skip directories
       if not ((searchFile.attr and faDirectory) = faDirectory) then
@@ -414,11 +384,7 @@ begin
           virtualDir := IniFile.ReadString('QuickLoad', virtualName, 'Misc');
         end;
 
-        {$IFDEF WINDOWS}
         AddQuickMenu(virtualDir + '\' + searchFile.Name, '\scripts\' + searchFile.Name);
-        {$ELSE}
-        AddQuickMenu(virtualDir + '/' + searchFile.Name, '/scripts/' + searchFile.Name);
-        {$ENDIF}
       end;
       until FindNext(searchFile) <> 0;
 
@@ -428,7 +394,7 @@ begin
 
   try
     // Process real file directories under scripts
-    if findfirst(scriptsPath + '*', faDirectory, searchDir) = 0 then
+    if findfirst(FProgramDir + '\scripts\*', faDirectory, searchDir) = 0 then
     repeat
       // Only show directories
       if (searchDir.attr and faDirectory) = faDirectory then
@@ -436,15 +402,11 @@ begin
         // Exclude undesired directories
         if (pos(Lowercase(searchDir.Name),'.,..,include,mombot,mombot3,mombot4p,qubot,zedbot') = 0) then
         begin
-          if findfirst(scriptsPath + searchDir.Name + {$IFDEF WINDOWS}'\'{$ELSE}'/'{$ENDIF} + '*', faAnyFile, searchFile) = 0 then
+          if findfirst(FProgramDir + '\scripts\' + searchDir.Name + '\*', faAnyFile, searchFile) = 0 then
           repeat
             // skip directories
             if not ((searchFile.attr and faDirectory) = faDirectory) then
-              {$IFDEF WINDOWS}
               AddQuickMenu(searchDir.Name + '\' + searchFile.Name, '\scripts\' + searchDir.Name + '\' + searchFile.Name);
-              {$ELSE}
-              AddQuickMenu(searchDir.Name + '/' + searchFile.Name, '/scripts/' + searchDir.Name + '/' + searchFile.Name);
-              {$ENDIF}
           until FindNext(searchFile) <> 0;
         end;
       end;
@@ -455,8 +417,9 @@ begin
     FindClose(searchFile);
   end;
 
-  IniFile.Free;
+
 end;
+
 
 procedure TfrmMain.LoadTrayIcon(const Value : string);
 var
@@ -502,6 +465,7 @@ end;
 procedure TfrmMain.miSetupClick(Sender: TObject);
 begin
   // Load up setup form
+
   (Owner as TModGUI).ShowForm(gfSetup);
 end;
 
@@ -509,13 +473,10 @@ procedure TfrmMain.miExitClick(Sender: TObject);
 begin
   // Exit program
 {$IFDEF WINDOWS}
-  if LargeIcon <> 0 then
-    DestroyIcon(LargeIcon);
-  if SmallIcon <> 0 then
-    DestroyIcon(SmallIcon);
+  DestroyIcon(LargeIcon);
+  DestroyIcon(SmallIcon);
 {$ENDIF}
-  if Assigned(MainIcon) then
-    MainIcon.Free;
+  MainIcon.Free;
 
   Application.Terminate;
 end;
@@ -540,11 +501,7 @@ begin
   // Reload this script
   FileName := TMenuItem(Sender).Caption;
   StripChar(FileName, '&');
-  {$IFDEF WINDOWS}
   TWXInterpreter.Load('scripts\' + FileName, FALSE);
-  {$ELSE}
-  TWXInterpreter.Load('scripts/' + FileName, FALSE);
-  {$ENDIF}
 end;
 
 procedure TfrmMain.miLoadClick(Sender: TObject);
@@ -554,18 +511,14 @@ begin
   if (LoadingScript) then
   begin
     {$IFDEF WINDOWS}
-    SetForegroundWindow(Application.Handle);
-    {$ELSE}
-    Application.BringToFront;
-    {$ENDIF}
+  SetForegroundWindow(Application.Handle);
+  {$ELSE}
+  Application.BringToFront;
+  {$ENDIF}
     Exit;
   end;
 
-  {$IFDEF WINDOWS}
   OpenDialog.InitialDir := FProgramDir + '\Scripts\';
-  {$ELSE}
-  OpenDialog.InitialDir := FProgramDir + '/Scripts/';
-  {$ENDIF}
   OpenDialog.Filter := 'TW script (*.ts, *.cts)|*.ts;*.cts';
   OpenDialog.Filename := 'script.ts';
   OpenDialog.Title := 'Load Script';
@@ -606,7 +559,7 @@ var
 begin
   if not (TWXDatabase.DatabaseOpen) then
   begin
-    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOK], 0);
+    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -633,7 +586,7 @@ begin
     {$I+}
 
     if (IOResult <> 0) then
-      MessageDlg('Unable to open file for export', mtError, [mbOK], 0)
+      MessageDlg('Unable to open file for export', mtError, [mbOk], 0)
     else
     begin
       // MB - write : to the beginning od the file for Swath compatablilty.
@@ -674,11 +627,7 @@ end;
 procedure TfrmMain.miPlayLogClick(Sender: TObject);
 begin
   // play back a log file
-  {$IFDEF WINDOWS}
   OpenDialog.InitialDir := FProgramDir + '\Logs\';
-  {$ELSE}
-  OpenDialog.InitialDir := FProgramDir + '/Logs/';
-  {$ENDIF}
   OpenDialog.Filter := 'Binary capture files (*.cap)|*.cap|All files (*.*)|*.*';
   OpenDialog.Filename := '';
   OpenDialog.Title := 'Play Capture File';
@@ -732,7 +681,7 @@ var
 begin
   if not (TWXDatabase.DatabaseOpen) then
   begin
-    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOK], 0);
+    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -750,7 +699,7 @@ begin
     {$I+}
 
     if (IOResult <> 0) then
-      MessageDlg('Unable to open file for import', mtError, [mbOK], 0)
+      MessageDlg('Unable to open file for import', mtError, [mbOk], 0)
     else
     begin
       while not eof(F) do
@@ -763,7 +712,7 @@ begin
 
           if (X = 0) then
           begin
-            MessageDlg('Error importing warp data - corrupt?', mtError, [mbOK], 0);
+            MessageDlg('Error importing warp data - corrupt?', mtError, [mbOk], 0);
             CloseFile(F);
              Exit;
          end;
@@ -832,7 +781,7 @@ var
 begin
   if not (TWXDatabase.DatabaseOpen) then
   begin
-    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOK], 0);
+    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -859,14 +808,14 @@ begin
 
     if (IOResult <> 0) then
     begin
-      MessageDlg('Unable to open file', mtError, [mbOK], 0);
+      MessageDlg('Unable to open file', mtError, [mbOk], 0);
       Exit;
     end;
 
     try
       TWXBubble.ExportBubbles(F);
     except
-      MessageDlg('Error exporting bubble list', mtError, [mbOK], 0);
+      MessageDlg('Error exporting bubble list', mtError, [mbOk], 0);
       CloseFile(F);
     end;
 
@@ -886,7 +835,7 @@ var
 begin
   if not (TWXDatabase.DatabaseOpen) then
   begin
-    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOK], 0);
+    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -913,7 +862,7 @@ begin
 
     if (IOResult <> 0) then
     begin
-      MessageDlg('Unable to open file', mtError, [mbOK], 0);
+      MessageDlg('Unable to open file', mtError, [mbOk], 0);
       Exit;
     end;
 
@@ -928,7 +877,7 @@ begin
 
         if (IOResult <> 0) then
         begin
-          MessageDlg('Error exporting dead end list', mtError, [mbOK], 0);
+          MessageDlg('Error exporting dead end list', mtError, [mbOk], 0);
           CloseFile(F);
           Exit;
         end;
@@ -947,7 +896,7 @@ procedure TfrmMain.miExportTWXClick(Sender: TObject);
 begin
   if not (TWXDatabase.DatabaseOpen) then
   begin
-    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOK], 0);
+    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -967,7 +916,7 @@ begin
       ExportTWXFile(SaveDialog.Filename); // Cross-platform export functionality enabled
       MessageDlg('TWX file exported successfully.', mtInformation, [mbOK], 0);
     except
-      MessageDlg('An error occurred while attempting to export data from the selected database', mtError, [mbOK], 0);
+      MessageDlg('An error occured while attempting to export data from the selected database', mtError, [mbOK], 0);
       Exit;
     end;
 
@@ -985,7 +934,7 @@ begin
 
   if not (TWXDatabase.DatabaseOpen) then
   begin
-    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOK], 0);
+    MessageDlg('You do not have a database selected, or it is invalid and needs to be rebuilt.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -1003,7 +952,7 @@ begin
       ImportTWXFile(OpenDialog.Filename, KeepRecent); // Cross-platform import functionality enabled
       MessageDlg('TWX file imported successfully.', mtInformation, [mbOK], 0);
     except
-      MessageDlg('An error occurred while attempting to import data from the selected file', mtError, [mbOK], 0);
+      MessageDlg('An error occured while attempting to import data from the selected file', mtError, [mbOK], 0);
       Errored := TRUE;
     end;
 
@@ -1054,11 +1003,7 @@ var
   Result,
   Update    : string;
 begin
-  {$IFDEF WINDOWS}
   IniFile := TIniFile.Create(FProgramDir + '\twxp.cfg');
-  {$ELSE}
-  IniFile := TIniFile.Create(FProgramDir + '/twxp.cfg');
-  {$ENDIF}
 
   Result := '';
   {$IFDEF WINDOWS}
@@ -1105,12 +1050,12 @@ begin
         begin
           if Application.MessageBox('An updated verion of TWX Proxy is available.'  + endl +
           'Would you like to download it now?',
-		    'Checking for Updates', {$IFDEF WINDOWS}MB_YESNO{$ELSE}0{$ENDIF}) = {$IFDEF WINDOWS}IDYES{$ELSE}1{$ENDIF} then
+			    'Checking for Updates', {$IFDEF WINDOWS}MB_YESNO{$ELSE}0{$ENDIF}) = {$IFDEF WINDOWS}IDYES{$ELSE}1{$ENDIF} then
           {$IFDEF WINDOWS}
-          ShellExecute(Handle,'open','https://github.com/TW2002/TWXP/wiki',nil,nil, SW_SHOWNORMAL);
-          {$ELSE}
-          OpenURL('https://github.com/TW2002/TWXP/wiki');
-          {$ENDIF}
+  ShellExecute(Handle,'open','https://github.com/TW2002/TWXP/wiki',nil,nil, SW_SHOWNORMAL);
+  {$ELSE}
+  OpenURL('https://github.com/TW2002/TWXP/wiki');
+  {$ENDIF}
         end;
       end
       else
@@ -1121,7 +1066,7 @@ begin
           IniFile.WriteString('TWX Proxy', 'UpdateAvailable', 'False');
           miUpdateNow.Visible := False;
           Application.MessageBox('You are running the latest version of TWX Proxy.',
-		    'Checking for Updates', {$IFDEF WINDOWS}MB_OK{$ELSE}0{$ENDIF})
+			    'Checking for Updates', {$IFDEF WINDOWS}MB_OK{$ELSE}0{$ENDIF})
         end;
       end;
   finally
@@ -1130,6 +1075,7 @@ begin
 
   end;
 end;
+
 
 procedure TfrmMain.miUpdateNowClick(Sender: TObject);
 begin
@@ -1143,6 +1089,7 @@ end;
 
 // ************************************************************************
 // Other
+
 
 procedure TfrmMain.trayIconDblClick(Sender: TObject);
 begin
@@ -1164,11 +1111,7 @@ var
    IniFile     : TIniFile;
    LastUpdateCheck : String;
 begin
-  {$IFDEF WINDOWS}
   IniFile := TIniFile.Create(FProgramDir + '\twxp.cfg');
-  {$ELSE}
-  IniFile := TIniFile.Create(FProgramDir + '/twxp.cfg');
-  {$ENDIF}
 
   try
     LastUpdateCheck := IniFile.ReadString('TWX Proxy', 'LastUpdateCheck', '');
@@ -1214,16 +1157,9 @@ var
   MenuItem: TQuickMenuItem;
   NameList : TStringList;
   Item  : TMenuItem;
-  pathSep : Char;
 begin
-  {$IFDEF WINDOWS}
-  pathSep := '\';
-  {$ELSE}
-  pathSep := '/';
-  {$ENDIF}
-  
   NameList := TStringList.Create;
-  ExtractStrings([pathSep], [], PChar(QuickName), NameList);
+  ExtractStrings(['\'], [], PChar(QuickName), NameList);
 
   if NameList.Count = 2 then
   begin
@@ -1298,23 +1234,21 @@ end;
 
 procedure TfrmMain.OnQuickMenuItemClick(Sender: TObject);
 begin
-    TWXInterpreter.Load(FProgramDir + TQuickMenuItem(Sender).ScriptName, False)
+    TWXInterpreter.Load(FProgramDir + '\' + TQuickMenuItem(Sender).ScriptName, False)
 end;
+
 
 procedure TfrmMain.OnScriptMenuItemClick(Sender: TObject);
 begin
   TWXInterpreter.StopByHandle(TScriptMenuItem(Sender).Script);
 end;
 
+
 procedure TfrmMain.popupShown(Sender: TObject);
 var
   IniFile   : TIniFile;
 begin
-  {$IFDEF WINDOWS}
   IniFile := TIniFile.Create(FProgramDir + '\twxp.cfg');
-  {$ELSE}
-  IniFile := TIniFile.Create(FProgramDir + '/twxp.cfg');
-  {$ENDIF}
 
   try
     if IniFile.ReadString('TWX Proxy', 'UpdateAvailable', '') = 'True' then

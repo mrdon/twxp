@@ -168,7 +168,7 @@ begin
     for J := 1 to SizeOf(Integer) do
     begin
       Chunk := Char(Byte(P^) xor FScrambleSeed xor ChunkKey xor J) + Chunk;
-      P := Pointer(Integer(P) + 1);
+      P := Pointer(PtrUInt(P) + 1);
     end;
 
     if (Random < 0.5) or (X < FChunkSize) then
@@ -219,7 +219,7 @@ begin
     begin
       Byte(P^) := Byte(P^) xor (5 - J) xor ChunkKey xor FScrambleSeed;
       ChunkIdx := Char(P^) + ChunkIdx;
-      P := Pointer(Integer(P) + 1);
+      P := Pointer(PtrUInt(P) + 1);
     end;
 
     ChunkIndex := Integer(Pointer(ChunkIdx)^);

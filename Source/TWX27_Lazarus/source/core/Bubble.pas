@@ -108,7 +108,7 @@ begin
     FDeepestDepth := Depth;
   end;
 
-  Byte(Pointer(Integer(FAreaCovered) + AreaIndex - 1)^) := 1;
+  Byte(Pointer(PtrUInt(FAreaCovered) + AreaIndex - 1)^) := 1;
 
   Result := TRUE;
 
@@ -116,7 +116,7 @@ begin
   begin
     if (Area.Warp[I] = 0) then
       Break
-    else if (Area.Warp[I] <> Last) and (Byte(Pointer(Integer(FAreaCovered) + Area.Warp[I] - 1)^) = 0) and (Area.Explored <> etNo) then
+    else if (Area.Warp[I] <> Last) and (Byte(Pointer(PtrUInt(FAreaCovered) + Area.Warp[I] - 1)^) = 0) and (Area.Explored <> etNo) then
     begin
       S := TWXDatabase.LoadSector(Area.Warp[I]);
 
@@ -239,7 +239,7 @@ begin
   begin
     S := TWXDatabase.LoadSector(I);
 
-    if (S.Warp[2] > 0) and (Byte(Pointer(Integer(FBubblesCovered) + I - 1)^) = 0) then
+    if (S.Warp[2] > 0) and (Byte(Pointer(PtrUInt(FBubblesCovered) + I - 1)^) = 0) then
     begin
       CheckBubble(S.Warp[1]);
       CheckBubble(S.Warp[2]);
@@ -261,7 +261,7 @@ begin
   // Show bubbles that aren't parts of bubbles
   for I := 0 to FBubbleList.Count - 1 do
   begin
-    if (Byte(Pointer(Integer(FBubblesCovered) + TBubble(FBubbleList.Items[I]^).Gate - 1)^) = 0) then
+    if (Byte(Pointer(PtrUInt(FBubblesCovered) + TBubble(FBubbleList.Items[I]^).Gate - 1)^) = 0) then
     begin
       SGate := IntToStr(TBubble(FBubbleList.Items[I]^).Gate);
       SDeepest := IntToStr(TBubble(FBubbleList.Items[I]^).Deepest);
@@ -351,7 +351,7 @@ begin
     Col := 1;
 
     for I := 1 to TWXDatabase.DBHeader.Sectors do
-      if (Byte(Pointer(Integer(FAreaCovered) + I - 1)^) = 1) then
+      if (Byte(Pointer(PtrUInt(FAreaCovered) + I - 1)^) = 1) then
       begin
         Inc(Col);
         TWXServer.Broadcast(IntToStr(I) + GetSpace(6 - Length(IntToStr(I))));

@@ -25,13 +25,12 @@
         <CompilerOptions>
           <Version Value="11"/>
           <PathDelim Value="/"/>
-        <CustomOptions Value="-dLCL -dLCLgtk2"/>
           <Target>
             <Filename Value="TWXP"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);/usr/share/lazarus/4.2.0/lcl/include"/>
-            <OtherUnitFiles Value="../../source/forms;../../source/core;../../source/utils;../../source/libs/synapse;../../source;/usr/share/lazarus/4.2.0/lcl;/usr/share/lazarus/4.2.0/lcl/interfaces/gtk2;/usr/share/lazarus/4.2.0/lcl/widgetset;/usr/share/lazarus/4.2.0/lcl/forms;/usr/share/lazarus/4.2.0/lcl/units/x86_64-linux;/usr/share/lazarus/4.2.0/components/lazutils/lib/x86_64-linux"/>
+            <OtherUnitFiles Value="../../source/forms;../../source/core;../../source/utils;../../source/libs/synapse;../../source;/usr/share/lazarus/4.2.0/lcl/units/x86_64-linux;/usr/share/lazarus/4.2.0/components/lazutils/lib/x86_64-linux"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
@@ -62,13 +61,12 @@
         <CompilerOptions>
           <Version Value="11"/>
           <PathDelim Value="/"/>
-        <CustomOptions Value="-dLCL -dLCLgtk2"/>
           <Target>
             <Filename Value="TWXP"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);/usr/share/lazarus/4.2.0/lcl/include"/>
-            <OtherUnitFiles Value="../../source/forms;../../source/core;../../source/utils;../../source/libs/synapse;../../source;/usr/share/lazarus/4.2.0/lcl;/usr/share/lazarus/4.2.0/lcl/interfaces/gtk2;/usr/share/lazarus/4.2.0/lcl/widgetset;/usr/share/lazarus/4.2.0/lcl/forms;/usr/share/lazarus/4.2.0/lcl/units/x86_64-linux;/usr/share/lazarus/4.2.0/components/lazutils/lib/x86_64-linux"/>
+            <OtherUnitFiles Value="../../source/forms;../../source/core;../../source/utils;../../source/libs/synapse;../../source;/usr/share/lazarus/4.2.0/lcl/units/x86_64-linux;/usr/share/lazarus/4.2.0/components/lazutils/lib/x86_64-linux"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
@@ -114,7 +112,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);/usr/share/lazarus/4.2.0/lcl/include"/>
-      <OtherUnitFiles Value="../../source/forms;../../source/core;../../source/utils;../../source/libs/synapse;../../source;/usr/share/lazarus/4.2.0/lcl;/usr/share/lazarus/4.2.0/lcl/interfaces/gtk2;/usr/share/lazarus/4.2.0/lcl/widgetset;/usr/share/lazarus/4.2.0/lcl/forms;/usr/share/lazarus/4.2.0/lcl/units/x86_64-linux;/usr/share/lazarus/4.2.0/components/lazutils/lib/x86_64-linux"/>
+      <OtherUnitFiles Value="../../source/forms;../../source/core;../../source/utils;../../source/libs/synapse;../../source;/usr/share/lazarus/4.2.0/components/lazutils"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -123,6 +121,17 @@
       </Debugging>
     </Linking>
   </CompilerOptions>
+  <RequiredPackages>
+    <Item>
+      <PackageName Value="LCL"/>
+    </Item>
+  </RequiredPackages>
+  <Units>
+    <Unit>
+      <Filename Value="TWXP.lpr"/>
+      <IsPartOfProject Value="True"/>
+    </Unit>
+  </Units>
   <Debugging>
     <Exceptions>
       <Item Name="EAbort"/>

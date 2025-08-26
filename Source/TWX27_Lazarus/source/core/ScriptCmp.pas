@@ -563,14 +563,14 @@ begin
   // write this data to the end of the byte-code
 
   ReallocMem(FCode, FCodeSize + NewCodeSize);
-  P1 := Pointer(Integer(FCode) + FCodeSize);
+  P1 := Pointer(PtrUInt(FCode) + FCodeSize);
   P2 := NewCode;
 
   for B := 1 to NewCodeSize do
   begin
     Byte(P1^) := Byte(P2^);
-    P1 := Pointer(Integer(P1) + 1);
-    P2 := Pointer(Integer(P2) + 1);
+    P1 := Pointer(PtrUInt(P1) + 1);
+    P2 := Pointer(PtrUInt(P2) + 1);
   end;
 
   Inc(FCodeSize, NewCodeSize);

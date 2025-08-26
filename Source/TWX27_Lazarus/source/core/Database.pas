@@ -493,7 +493,7 @@ begin
       FreeMem(Last);
     end;
 
-    P := Pointer(Integer(P) + SizeOf(Pointer));
+    P := Pointer(PtrUInt(P) + SizeOf(Pointer));
   end;
 
   // purge old empty record caches
@@ -770,7 +770,7 @@ begin
   if not (DatabaseOpen) then
     Exit;
 
-  W := PWarpIn(Pointer(Integer(SectorWarpCache) + (Sect - 1) * 4)^);
+  W := PWarpIn(Pointer(PtrUInt(SectorWarpCache) + (Sect - 1) * 4)^);
 
   while (W <> nil) do
   begin
@@ -1243,7 +1243,7 @@ begin
   W^.Origin := Origin;
 
   // hook the new warp into this sector's warpin list
-  P := Pointer(Integer(SectorWarpCache) + (Sect - 1) * SizeOf(Pointer));
+  P := Pointer(PtrUInt(SectorWarpCache) + (Sect - 1) * SizeOf(Pointer));
   W^.NextWarpIn := PWarpIn(P^);
   Pointer(P^) := W;
 end;
@@ -1407,7 +1407,7 @@ procedure TModDatabase.ReadData(Data : Pointer; Index, Size : Integer);
 begin
   if (UseCache) then
     // cache enabled - read data directly from data cache
-    TWX_CopyMemory(Data, Pointer(Integer(DataCache) + Index), Size)
+    TWX_CopyMemory(Data, Pointer(PtrUInt(DataCache) + Index), Size)
   else
   begin
     // cache disabled - read data from file
@@ -1440,7 +1440,7 @@ begin
       end;
     end;
 
-    DataIndex := Pointer(Integer(DataCache) + Index);
+    DataIndex := Pointer(PtrUInt(DataCache) + Index);
 
     if not (CompareMem(DataIndex, Data, Size)) then
       begin

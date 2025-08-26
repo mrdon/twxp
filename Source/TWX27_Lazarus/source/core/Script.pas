@@ -1602,31 +1602,31 @@ begin
   // used to read command parameters from compiled script byte code.
 
   Result := CodeRef;
-  CodeRef := Pointer(Integer(CodeRef) + ReadSize);
+  CodeRef := Pointer(PtrUInt(CodeRef) + ReadSize);
 end;}
 
 function TScript.ReadByte(var CodeRef : Pointer) : Byte;
 begin
   Result := Byte(CodeRef^);
-  CodeRef := Pointer(Integer(CodeRef) + SizeOf(Byte));
+  CodeRef := Pointer(PtrUInt(CodeRef) + SizeOf(Byte));
 end;
 
 function TScript.ReadChar(var CodeRef : Pointer) : Char;
 begin
   Result := Char(CodeRef^);
-  CodeRef := Pointer(Integer(CodeRef) + SizeOf(Char));
+  CodeRef := Pointer(PtrUInt(CodeRef) + SizeOf(Char));
 end;
 
 function TScript.ReadWord(var CodeRef : Pointer) : Word;
 begin
   Result := Word(CodeRef^);
-  CodeRef := Pointer(Integer(CodeRef) + SizeOf(Word));
+  CodeRef := Pointer(PtrUInt(CodeRef) + SizeOf(Word));
 end;
 
 function TScript.ReadInteger(var CodeRef : Pointer) : Integer;
 begin
   Result := Integer(CodeRef^);
-  CodeRef := Pointer(Integer(CodeRef) + SizeOf(Integer));
+  CodeRef := Pointer(PtrUInt(CodeRef) + SizeOf(Integer));
 end;
 
 function TScript.ReadIndexValues(var CodeRef : Pointer; IndexCount : Byte) : TStringArray;
@@ -1874,7 +1874,7 @@ begin
     begin
       if (Cmp.Labels[I].Name = L) then
       begin
-        CodePos := Pointer(Integer(Cmp.Code) + Cmp.Labels[I].Location);
+        CodePos := Pointer(PtrUInt(Cmp.Code) + Cmp.Labels[I].Location);
         Exit;
       end;
     end;
